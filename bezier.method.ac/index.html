@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!-- saved from url=(0025)https://bezier.method.ac/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   
+  <title>The Bézier Game</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta property="og:url" content="http://bezier.method.ac"> 
+  <meta property="og:title" content="The Bézier Game">
+  <meta property="og:description" content="A game to help you master the pen tool"> 
+  <meta property="og:image" content="http://bezier.method.ac/images/fbimage.png"> 
+  
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
+</head>
+<body>
+
+  <div id="game" style="display: block;">
+    <div id="ui_controls">
+
+      <div class="ui_control">
+        <div class="ui_button" id="ui_undo"><span class="shortcut">⌘z</span>Undo</div>
+      </div>
+
+      <div class="ui_control">
+        <div class="ui_button" id="ui_redo"><span class="shortcut">⇧⌘z</span>Redo</div>
+      </div>
+
+      <div class="ui_control">
+        <div class="ui_button" id="ui_reload"><span class="shortcut">⌘x</span>Clear Stage</div>
+      </div>
+
+      <div class="ui_control">
+        <div class="ui_button" id="ui_undo"><span class="shortcut">⇧</span>Snap to Angle</div>
+      </div>
+
+      <div class="ui_control">
+        <div class="ui_button" id="ui_redo"><span class="shortcut">⌥</span>Unlink Control Handles</div>
+      </div>
+
+    </div>
+    
+    <div id="tooltip">
+      <div class="tooltip_body">
+        <div class="tooltip_text" id="tooltip_text"></div>
+      </div>
+    </div>
+
+    <svg id="workspace" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        <lineargradient id="tut_key" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ddd"></stop>
+          <stop offset="100%" stop-color="#fff"></stop>
+        </lineargradient>
+        <lineargradient id="tut_key_body" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#fff" stop-opacity="0.8"></stop>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0.4"></stop>
+        </lineargradient>
+        <filter id="innerbevel" x0="-50%" y0="-50%" width="200%" height="200%">
+          <fegaussianblur in="SourceAlpha" stdDeviation="2" result="blur"></fegaussianblur>
+          <fegaussianblur in="SourceAlpha" stdDeviation="0.5" result="highlight"></fegaussianblur>
+          <feoffset dy="-1" dx="0" in="highlight"></feoffset>
+          <fecomposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="hlDiff"></fecomposite>
+          <feflood flood-color="white" flood-opacity=".1"></feflood>
+          <fecomposite in2="hlDiff" operator="in"></fecomposite>
+          <fecomposite in2="SourceGraphic" operator="over" result="withGlow"></fecomposite>
+
+          <feoffset in="blur" dy="1" dx="0"></feoffset>
+          <fecomposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff"></fecomposite>
+          <feflood flood-color="black" flood-opacity="0.8"></feflood>
+          <fecomposite in2="shadowDiff" operator="in"></fecomposite>
+          <fecomposite in2="withGlow" operator="over"></fecomposite>
+        </filter>
+        <marker id="markerCircle" markerWidth="40" markerHeight="40" refX="20" refY="20" markerUnits="userSpaceOnUse">
+          <circle cx="20" cy="20" r="10" fill="#393F43" id="marker_circle"></circle>
+        </marker>
+      </defs>
+      <g id="center" transform="translate(703,334)">
+        <circle cx="200" cy="200" r="10" id="endpoint"></circle>
+        <circle cx="0" cy="0" r="10" id="startpoint"></circle>
+        <path d="M 300 300 Z" id="bbox"></path>
+        
+        <path d="M 0 0 L 200 0 L 200 200" id="problem" filter="url(#innerbevel)" marker-start="url(#markerCircle)" marker-end="url(#markerCircle)" style="opacity: 0.99;" opacity="1"></path><path d="M 0 0" class="placeholder" id="placeholder"></path>
+        <g id="segments"></g>
+        <g id="remaining_nodes">
+          <text><tspan id="remaining_text">0</tspan> Nodes remaining</text>
+        </g>
+        <g id="available_nodes"></g>
+        <g id="tutorial" style="opacity: 0.2;">
+          <image id="tut_cursor" xlink:href="img-penne.png" width="16" height="16" x="200" y="200" transform="translate(-8, 0)" style="opacity: 0;"></image>
+          <circle id="tut_click" r="0" cx="199.5" cy="199.5" style="opacity: 1;"></circle>
+          <g id="tut_key" transform="translate(100,100)">
+            <rect x="-1" y="10" width="82" height="40" fill="url(#tut_key_body)" opacity="0.3" rx="3" ry="3"></rect>
+            <g id="tut_key_move">
+              <rect x="0" y="-1" width="80" height="40" fill="white" rx="3" ry="3"></rect>
+              <rect x="0" y="0" width="80" height="40" fill="url(#tut_key)" rx="3" ry="3"></rect>
+              <text x="10" y="30" id="tut_key_text"></text>
+            </g>
+          </g>
+          <g id="tut_segments"><path d="M -0.5 -0.5 C -0.5 -0.5 -0.5 -0.5 200 0 C 199.5 -0.5 199.5 -0.5 200 200 C 199.5 199.5 199.5 199.5 199.5 199.5"></path></g>
+          <g id="tut_nodes"><g style="opacity: 1;"><rect width="5" height="5" x="-3" y="-3"></rect><circle r="2" cx="-0.5" cy="-0.5"></circle><circle r="2" cx="-0.5" cy="-0.5"></circle><line x1="-0.5" x2="-0.5" y1="-0.5" y2="-0.5"></line><line x1="-0.5" x2="-0.5" y1="-0.5" y2="-0.5"></line></g><g style="opacity: 1;"><rect width="5" height="5" x="197" y="-3"></rect><circle r="2" cx="199.5" cy="-0.5"></circle><circle r="2" cx="199.5" cy="-0.5"></circle><line x1="199.5" x2="199.5" y1="-0.5" y2="-0.5"></line><line x1="199.5" x2="199.5" y1="-0.5" y2="-0.5"></line></g><g style="opacity: 1;"><rect width="5" height="5" x="197" y="197"></rect><circle r="2" cx="199.5" cy="199.5"></circle><circle r="2" cx="199.5" cy="199.5"></circle><line x1="199.5" x2="199.5" y1="199.5" y2="199.5"></line><line x1="199.5" x2="199.5" y1="199.5" y2="199.5"></line></g></g>
+        </g>
+        
+        <circle id="pulsator_start" r="1.4045000000002075" cx="0" cy="0" style="opacity: 1;"></circle>
+        <circle id="pulsator_end" class="hidden" r="0" cx="200" cy="200"></circle>
+        <text id="replay_tutorial" x="803" y="824" style="opacity: 1;">Replay Tutorial</text>
+      </g>
+    </svg>
+
+    <div id="final_score" class="hidden">
+      <div class="subtitle">You completed the Beziér Game with</div> 
+      <div class="title"><span id="nodes_to_spare">0</span> nodes to spare</div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="260" height="60" id="final_score_svg">
+      </svg>
+      <div class="line_button" id="final_score_tweet">Tweet your score</div>
+      <div class="note"><a href="https://bezier.method.ac/">Play again</a></div>
+    </div>
+
+    <div id="stage_score" class="slidden">
+      
+      <div id="stage_score_container">
+      
+        <div class="left">
+          <div class="note">You used</div>
+          <div class="node_count_title"><span id="nodes_used">0</span> nodes</div>
+          <div class="note">out of <span id="nodes_available">0</span> available</div>
+        </div>
+        
+        <div class="right">
+
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156 51" version="1.1" width="156" height="51" class="svg_button" id="ui_next_stage">
+              <path d="M 1 7.73 C 1 3.44 3.45 1 7.76 1 L 127.27 1 L 155 24.46 L 127.27 50 L 127.27 50 L 7.76 50 C 3.45 50 1 47.56 1 43.27 L 1 7.73 Z"></path>
+              <text x="20" y="31">Next Stage</text>
+            </svg>
+            <div class="normal hidden message">
+              <div class="note">The ideal solution has <span id="min_nodes">0</span> nodes. Think you can do better? <a href="https://bezier.method.ac/#" id="stage_try_again">Try again</a></div>
+            </div>
+        </div>
+      
+      </div>
+
+    </div>
+    <div id="tut_skip">Skip Tutorial Stages<span></span></div> 
+    <canvas id="canvas" width="1606" height="868"></canvas>
+    <canvas id="scratchpad"></canvas>
+    <div id="contact">
+      Enjoying?<br>
+      <a href="https://method.ac/donate/">Donations appreciated</a>
+    </div>
+  </div>
+
+  <div id="notice">
+    <div class="container">
+      <h1>This game requires <strong>keyboard</strong> and <strong>mouse</strong></h1>
+      <p>It seems you are on a touch device, but I can't tell for sure, please confirm:</p>
+        
+      <p><a href="https://bezier.method.ac/#" class="button continue">I'm using a keyboard and a mouse/trackpad</a>
+        <span class="dimmed">You will continue to The Bézier Game.</span>
+      </p>
+      <p>
+        <a href="https://boolean.method.ac/" class="button">I'm using my fingers on a phone or tablet</a>
+        <span class="dimmed">You will be redirected to The Boolean Game, which works on any device.</span>
+      </p>
+      <p></p>
+    </div>
+  </div>
+
+  <div id="intro">
+    <div class="container">
+        <div id="title">
+          <h1>The Bézier Game</h1> 
+          <p>A game to help you master the <img src="img-pen-tool.png" width="26" height="22" alt=""> pen tool</p>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var isTouchDevice = 'ontouchstart' in document.documentElement;
+      var notice = document.getElementById("notice");
+      if (isTouchDevice) {
+        notice.classList.add("visible");
+      }
+
+      var play = notice.querySelector(".continue");
+
+      play.addEventListener("click", function(){
+        notice.classList.remove("visible");
+      })
+    </script>
+    <script type="text/javascript" src="pathseglist.js" charset="utf-8"></script>
+    <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+
+
+
+</body></html>
